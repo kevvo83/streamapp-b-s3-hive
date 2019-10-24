@@ -1,0 +1,8 @@
+export BOOTSTRAP_SERVER="pkc-lgn3r.australia-southeast1.gcp.confluent.cloud:9092"
+export SCHEMA_REGISTRY_SERVER="https://psrc-lo3do.us-east-2.aws.confluent.cloud"
+export CCLOUD_KEY="AMGV6CI66LRHG76J"
+export CCLOUD_SECRET="1NmNfyS+9TXuFmXiGKoAbQC2ZbXHBvwHEbAMPt3IBRSjHjvMlj50di8Hm2sQF9vo"
+export JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$CCLOUD_KEY\" password=\"$CCLOUD_SECRET\";"
+export SCHEMA_REGISTRY_KEY="4MAMQL277HNL4SD4"
+export SCHEMA_REGISTRY_SECRET="NzgtT7KDXRaYC2DaBkBNtsSTsxTP35uYBZl+vv81LE3FcSXAvtzeYw5QXw4Ydmo/"
+export SCHEMA_REGISTRY_AUTH_USER_INFO="${SCHEMA_REGISTRY_KEY}:${SCHEMA_REGISTRY_SECRET}"
