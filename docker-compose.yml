@@ -1,83 +1,93 @@
-version: '2'
+version: "3.3"
+
 services:
 
-  connect:
-    image: confluentinc/cp-kafka-connect:5.3.1
-    hostname: connect
-    container_name: connect
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.3.0
+    hostname: zookeeper
     ports:
-      - "8083:8083"
-      - "9999:9999"
-    volumes:
-      - ./plugins:/plugins
-      - ./configs/kafka-connect-s3:/etc/kafka-connect-s3
+      - 32181:32181
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVER
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: "connect"
-      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
-      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
-      CONNECT_STATUS_STORAGE_TOPIC: connect-status
-      CONNECT_REPLICATION_FACTOR: 3
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
-      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_SERVER
-      CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_AUTH_USER_INFO
-      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
-      CONNECT_PLUGIN_PATH: "/usr/share/java,/plugins"
-      CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
-      CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
-      # CLASSPATH required due to CC-2422
-      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.3.1.jar
-      CONNECT_REQUEST_TIMEOUT_MS: 20000
-      CONNECT_RETRY_BACKOFF_MS: 500
-      # Connect worker
-      CONNECT_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_SASL_JAAS_CONFIG: $JAAS_CONFIG
-      CONNECT_SASL_MECHANISM: PLAIN
-      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
-      # Connect producer
-      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_PRODUCER_SASL_JAAS_CONFIG: $JAAS_CONFIG
-      CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $JAAS_CONFIG
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-      # Connect consumer
-      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_CONSUMER_SASL_JAAS_CONFIG: $JAAS_CONFIG
-      CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $JAAS_CONFIG
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-      # JMX Monitoring
-      KAFKA_JMX_PORT: 9999
-      KAFKA_JMX_HOSTNAME: "127.0.0.1"
+      - ZOOKEEPER_CLIENT_PORT=32181
+      - ZOOKEEPER_TICK_TIME=2000
+    extra_hosts:
+      - "moby:127.0.0.1"
     networks:
       - pg_def
+
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:5.3.0
+    hostname: kafkahost
+    ports:
+      - 9092:9092
+      - 29092:29092
+    #command: /bin/bash -c "/scripts/kafka-basic-os-setup.sh"
+    volumes:
+      - ./scripts:/scripts
+      #- ./kafka.properties:/etc/kafka/kafka.properties
+    depends_on:
+      - zookeeper
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:32181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=false
+      - KAFKA_METRIC_REPORTERS=io.confluent.metrics.reporter.ConfluentMetricsReporter
+      - CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS=kafka:29092
+      - CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT=zookeeper:32181
+      - CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS=1
+      - CONFLUENT_METRICS_ENABLE=true
+      - CONFLUENT_SUPPORT_CUSTOMER_ID=anonymous
+    extra_hosts:
+      - "moby:127.0.0.1"
+    networks:
+      - pg_def
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.3.0
+    hostname: schema-registry
+    ports:
+      - 8081:8081
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      - SCHEMA_REGISTRY_HOST_NAME=schema-registry
+      - SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:32181
+    extra_hosts:
+      - "moby:127.0.0.1"
+    networks:
+      - pg_def
+
+  debezium-postgres:
+    image: debezium/postgres
+    ports:
+      - 5952:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./sourcedatafiles:/sourcedatafiles
+    networks:
+      - pg_def
+    environment:
+      - POSTGRES_USER=postgres
 
   zepellin:
     image: apache/zeppelin:0.8.0
     ports:
-    - 8090:8080
+      - 9090:8080
     volumes:
       - ./notebook:/notebook
       - ./logs:/logs
       - ./sourcedatafiles:/sourcedatafiles
     environment:
-      ZEPPELIN_LOG_DIR: "/logs"
-      ZEPPELIN_NOTEBOOK_DIR: "/notebook"
+      - ZEPPELIN_LOG_DIR='/logs'
+      - ZEPPELIN_NOTEBOOK_DIR='/notebook'
     networks:
       - pg_def
+
 
 networks:
   pg_def:

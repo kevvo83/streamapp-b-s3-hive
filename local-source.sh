@@ -1,0 +1,8 @@
+export BOOTSTRAP_SERVER="localhost:9092"
+export SCHEMA_REGISTRY_SERVER="localhost:8081"
+export CCLOUD_KEY=""
+export CCLOUD_SECRET=""
+export JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$CCLOUD_KEY\" password=\"$CCLOUD_SECRET\";"
+export SCHEMA_REGISTRY_KEY=""
+export SCHEMA_REGISTRY_SECRET=""
+export SCHEMA_REGISTRY_AUTH_USER_INFO="${SCHEMA_REGISTRY_KEY}:${SCHEMA_REGISTRY_SECRET}"

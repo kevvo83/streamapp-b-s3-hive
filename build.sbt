@@ -22,6 +22,13 @@ val appb = (project in file("appb")).settings(
     "io.confluent" % "kafka-avro-serializer" % "3.3.0" withSources() withJavadoc(),
     "io.confluent" % "kafka-streams-avro-serde" % "5.3.0" withSources() withJavadoc(),
 
+    // Akka HTTP dependencies for REST capabilities
+    "com.typesafe.akka" %% "akka-actor" % "2.5.25",
+    "com.typesafe.akka" %% "akka-http" % "10.1.9",
+    "com.typesafe.akka" %% "akka-stream" % "2.5.25",
+    "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.9" ,
+    "com.typesafe.akka" %% "akka-testkit" % "2.5.25" % Test,
+
     // Kafka Streams libraries for microservices development
     "org.apache.kafka" % "kafka-streams" % "2.3.0",
     "org.apache.kafka" % "kafka-streams-test-utils" % "2.3.0" % Test,

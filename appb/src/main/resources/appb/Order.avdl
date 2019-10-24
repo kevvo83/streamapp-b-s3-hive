@@ -1,0 +1,20 @@
+@namespace("appb.appb")
+protocol IngressOrderService {
+
+  enum OrderState {
+    INIT, VALIDATED, COMPLETED, FAILED
+  }
+
+  record OrderValue {
+    long customerId;
+    OrderState orderState;
+    string productId;
+    int quantity;
+    double unitPrice;
+  }
+
+  record OrderKey {
+    string orderId;
+  }
+
+}
