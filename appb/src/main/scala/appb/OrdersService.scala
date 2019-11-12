@@ -2,6 +2,7 @@ package appb
 
 import java.io.FileInputStream
 import java.time.{Clock, Instant, ZoneId}
+import spray.json._
 
 import exps.KafkaClusterConfig
 import org.slf4j.{Logger, LoggerFactory}
@@ -18,6 +19,8 @@ import org.apache.kafka.clients.producer.{Callback, KafkaProducer, ProducerRecor
 
 import scala.io.StdIn
 import scala.util.{Failure, Success}
+
+import functions._
 
 object OrdersService extends App with KafkaClusterConfig with CustomJsonSupport {
 
@@ -46,8 +49,11 @@ object OrdersService extends App with KafkaClusterConfig with CustomJsonSupport 
     path(pm="") {
       get {
         val clock: Clock = Clock.system(ZoneId.of("GMT"))
-        val time: String = Instant.now(clock).toString
-        complete(HttpEntity(ContentTypes.`application/json`, s"""Generic GET request sent at ${time}"""))
+
+        // val time: String = Instant.now(clock).toString
+        // val rp = GenericResponse(Instant.now(clock))
+
+        complete(HttpEntity(ContentTypes.`application/json`, GenericResponse(Instant.now(clock).toString).toJson.prettyPrint ))
       }
     } ~
     path(pm="orders") {
@@ -60,9 +66,10 @@ object OrdersService extends App with KafkaClusterConfig with CustomJsonSupport 
 
             val kr: Option[ProducerRecord[GenericRecord, GenericRecord]] =
                                                   generateProducerRecord(orderKeyValueSchemaPair._1,
-                                                    orderKeyValueSchemaPair._2,
-                                                    kafkaClusterConfig.props.getProperty("ORDERSTOPIC"),
-                                                    specificorder)
+                                                                          orderKeyValueSchemaPair._2,
+                                                                          kafkaClusterConfig.props.
+                                                                                getProperty("ORDERSTOPIC"),
+                                                                          specificorder)
 
             kp.send(kr.get)
 

@@ -28,6 +28,8 @@ val appb = (project in file("appb")).settings(
     "com.typesafe.akka" %% "akka-stream" % "2.5.25",
     "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.9" ,
     "com.typesafe.akka" %% "akka-testkit" % "2.5.25" % Test,
+    "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.25" % Test,
+    "com.typesafe.akka" %% "akka-http-testkit" % "10.1.9" % Test,
 
     // Kafka Streams libraries for microservices development
     "org.apache.kafka" % "kafka-streams" % "2.3.0",

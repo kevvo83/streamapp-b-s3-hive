@@ -1,0 +1,36 @@
+{
+  "protocol" : "IngressOrderService",
+  "namespace" : "appb.appb",
+  "types" : [ {
+    "type" : "enum",
+    "name" : "OrderState",
+    "symbols" : [ "INIT", "VALIDATED", "COMPLETED", "FAILED" ]
+  }, {
+    "type" : "record",
+    "name" : "OrderValue",
+    "fields" : [ {
+      "name" : "customerId",
+      "type" : "long"
+    }, {
+      "name" : "orderState",
+      "type" : "OrderState"
+    }, {
+      "name" : "productId",
+      "type" : "string"
+    }, {
+      "name" : "quantity",
+      "type" : "int"
+    }, {
+      "name" : "unitPrice",
+      "type" : "double"
+    } ]
+  }, {
+    "type" : "record",
+    "name" : "OrderKey",
+    "fields" : [ {
+      "name" : "orderId",
+      "type" : "string"
+    } ]
+  } ],
+  "messages" : { }
+}
